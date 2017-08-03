@@ -10,6 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "mysql": "^2.13.0",
+    "node-prowl": "^0.1.7",
+    "wget-improved": "^1.5.0",
     "xml2js": "^0.4.17"
   }
 }
