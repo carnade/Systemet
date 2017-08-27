@@ -11,6 +11,7 @@
   "dependencies": {
     "mysql": "^2.13.0",
     "node-prowl": "^0.1.7",
+    "node-wget-promise": "0.0.7",
     "promises": "^0.2.5",
     "q": "^1.5.0",
     "wget-improved": "^1.5.0",
