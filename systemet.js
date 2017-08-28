@@ -9,7 +9,8 @@ var Q = require('q');
 var connection;
 
 //1
-var init_read = function () {
+ function init_read() {
+     //var init_read =
     console.log("1. Init connection...");
     var d = Q.defer();
     fs.readFile('pwd', 'utf8', function(err, readPwd) {
@@ -21,56 +22,68 @@ var init_read = function () {
             password: pass,
             database: 'systemet'
         //,        multipleStatements: true,
-        });
-        console.log("return init");
     });
+        console.log("return init");
+        d.resolve();
+    });
+
     return d.promise;
 };
 //2
-var get_data = function () {
+//var get_data = function () {
+function get_data() {
     //wget-improved
-    console.log("2. Get new data...");
+
     var d = Q.defer();
+    console.log("2. Get new data...");
     var src = 'https://www.systembolaget.se/api/assortment/products/xml';
     var today = new Date().toISOString().slice(0, 10);
     //console.log('today: ' + today);
     var output = 'data/' + today;
     var options = {};
-    options.gunzip = false;
-    (async () => {
-        var download = await wget.download(src, output, options);
+    //options.gunzip = false;
+    //(async () => {
+        var download = /*await*/ wget.download(src, output, options);
         download.on('error', function(err) {
             console.log(err);
             if (err) throw err;
         });
         download.on('end', function(err) {
              console.log('done');
+            d.resolve();
         });
 
-    })();
+    //})();
+    //d.resolve();
     return d.promise;
 };
 
 //3
-var delete_old_posts = function () {
+//var delete_old_posts = function () {
+function delete_old_posts() {
     //select -> delete old values
     var d = Q.defer();
-    console.log("2. Deleting rows...");
-        connection.connect(function(err) {
+    console.log("3. Deleting rows...");
+    var today = new Date().toISOString().slice(0, 10);
+    //fs.readFile('data/' + today, function(err, data) {
+    connection.connect(function(err) {
+        if (err) throw err;
+         connection.query('CALL `delete_mindate_posts`', function(err, result, fields) {
             if (err) throw err;
-            connection.query('CALL `delete_mindate_posts`', function(err, result, fields) {
-                if (err) throw err;
-                connection.end();
-
-            });
+            connection.end();
         });
+        d.resolve();
+    });
+    //});
     return d.promise;
 };
 //4
-var insert_data = function () {
+//var insert_data = function () {
+function insert_data() {
     //parse and insert new values
-    console.log("3. Inserting rows...");
+    console.log("4. Inserting rows...");
     var d = Q.defer();
+    var today = new Date().toISOString().slice(0, 10);
     //fs.readFile('data/' + today, function(err, data) {
     fs.readFile('data/' + 'test2.xml', function(err, data) {
         var parser = new xml2js.Parser();
@@ -104,9 +117,10 @@ var insert_data = function () {
                         if (err) throw err;
                         //    console.log(result);
                     });
-
+                    //d.resolve();
                 }
                 connection.end();
+
             //});
             });
         });
@@ -114,11 +128,15 @@ var insert_data = function () {
     return d.promise;
 };
 //5
-var find_insert_prowl_diff = function () {
+//var find_insert_prowl_diff = function () {
+function find_insert_prowl_diff() {
     // Select diff
-    conection.connect(function(err) {
+    var d = Q.defer();
+    var today = new Date().toISOString().slice(0, 10);
+    //fs.readFile('data/' + today, function(err, data) {
+    connection.connect(function(err) {
         if (err) throw err;
-        var d = Q.defer();
+
         console.log("4. Get all pricereductions...");
         connection.query('CALL `get_pricereduction`', function(err, rows, fields) {
             if (err) throw err;
@@ -175,17 +193,19 @@ var find_insert_prowl_diff = function () {
                     console.log("5.2 Nothing to insert...");
                     connection.end();
                 }
+            d.resolve();
             });
         });
     });
     return d.promise;
+
 };            //});
 
 init_read()
-.then(get_data())
-.then(delete_old_posts())
-//.then(insert_data())
-//.then(find_insert_prowl_diff())
+.then(get_data)
+.then(delete_old_posts)
+.then(insert_data)
+.then(find_insert_prowl_diff)
 .done();
 /*init_read()
 .then(insert_data());*/
