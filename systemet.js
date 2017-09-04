@@ -22,13 +22,16 @@ var connection;
             password: pass,
             database: 'systemet'
         //,        multipleStatements: true,
-    });
+        });
+        connection.connect(function(err) {
+            if (err) throw err;
+        });
         console.log("return init");
         d.resolve();
     });
 
     return d.promise;
-};
+}
 //2
 //var get_data = function () {
 function get_data() {
@@ -56,7 +59,7 @@ function get_data() {
     //})();
     //d.resolve();
     return d.promise;
-};
+}
 
 //3
 //var delete_old_posts = function () {
@@ -66,17 +69,14 @@ function delete_old_posts() {
     console.log("3. Deleting rows...");
     var today = new Date().toISOString().slice(0, 10);
     //fs.readFile('data/' + today, function(err, data) {
-    connection.connect(function(err) {
-        if (err) throw err;
          connection.query('CALL `delete_mindate_posts`', function(err, result, fields) {
             if (err) throw err;
-            connection.end();
+            d.resolve();
         });
-        d.resolve();
-    });
+//    });
     //});
     return d.promise;
-};
+}
 //4
 //var insert_data = function () {
 function insert_data() {
@@ -84,10 +84,10 @@ function insert_data() {
     console.log("4. Inserting rows...");
     var d = Q.defer();
     var today = new Date().toISOString().slice(0, 10);
-    //fs.readFile('data/' + today, function(err, data) {
-    fs.readFile('data/' + 'test2.xml', function(err, data) {
+    fs.readFile('data/' + today, function(err, data) {
+    //fs.readFile('data/' + '2017-08-31', function(err, data) {
         var parser = new xml2js.Parser();
-        connection.connect(function(err) {
+//        connection.connect(function(err) {
             parser.parseString(data, function(err, result) {
                 //Extract the value from the data element
                 createdTime = result.artiklar['skapad-tid'];
@@ -117,16 +117,17 @@ function insert_data() {
                         if (err) throw err;
                         //    console.log(result);
                     });
-                    //d.resolve();
+                    //
                 }
-                connection.end();
+
 
             //});
             });
-        });
+            d.resolve();
+//        });
     });
     return d.promise;
-};
+}
 //5
 //var find_insert_prowl_diff = function () {
 function find_insert_prowl_diff() {
@@ -134,8 +135,8 @@ function find_insert_prowl_diff() {
     var d = Q.defer();
     var today = new Date().toISOString().slice(0, 10);
     //fs.readFile('data/' + today, function(err, data) {
-    connection.connect(function(err) {
-        if (err) throw err;
+/*    connection.connect(function(err) {
+        if (err) throw err;*/
 
         console.log("4. Get all pricereductions...");
         connection.query('CALL `get_pricereduction`', function(err, rows, fields) {
@@ -170,6 +171,7 @@ function find_insert_prowl_diff() {
                         });
                     });
                     connection.end();
+                    d.resolve();
                     console.log("6. Prowl pricereductions...");
                     if (rows[0].length < 5) {
                         rows[0].forEach(function(result) {
@@ -192,20 +194,22 @@ function find_insert_prowl_diff() {
                 } else {
                     console.log("5.2 Nothing to insert...");
                     connection.end();
+                    d.resolve();
                 }
-            d.resolve();
+
             });
         });
-    });
+    //});
     return d.promise;
 
-};            //});
+}            //});
 
 init_read()
 .then(get_data)
 .then(delete_old_posts)
 .then(insert_data)
 .then(find_insert_prowl_diff)
+//.then()
 .done();
 /*init_read()
 .then(insert_data());*/
